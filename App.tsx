@@ -243,25 +243,24 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 overflow-y-auto">
+    <div className="flex flex-col h-full bg-[#FAFAFA] overflow-y-auto selection:bg-slate-900 selection:text-white">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between shadow-sm z-10 sticky top-0">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="p-1.5 sm:p-2 bg-indigo-600 rounded-lg text-white shadow-md shadow-indigo-200">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" className="sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+      <header className="glass-panel px-4 sm:px-8 py-4 flex items-center justify-between z-10 sticky top-0 border-b border-slate-200/50">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center shadow-lg shadow-slate-900/20">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="7" height="5" x="7" y="7" rx="1"/><rect width="7" height="5" x="10" y="12" rx="1"/></svg>
           </div>
-          <h1 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">OCR Pro</h1>
+          <h1 className="text-xl font-heading font-bold text-slate-900 tracking-tight">OCR Pro</h1>
         </div>
-        <div className="flex items-center gap-2 sm:gap-4"></div>
       </header>
 
-      <main className="flex-1 w-full max-w-5xl mx-auto p-3 sm:p-4 md:p-8">
+      <main className="flex-1 w-full max-w-6xl mx-auto p-4 sm:p-6 md:p-8">
         {images.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center animate-[fadeIn_0.5s_ease-out] py-4">
-            <div className="text-center mb-6 sm:mb-8 max-w-lg px-2">
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2 sm:mb-3">Rasmdan Matnga</h2>
-              <p className="text-sm sm:text-base text-slate-600">
-                Rasmni yuklang va sun'iy intellekt yordamida undagi matn va matematik misollarni soniyalar ichida ajratib oling.
+            <div className="text-center mb-10 max-w-lg px-2">
+              <h2 className="text-4xl sm:text-5xl font-heading font-bold text-slate-900 mb-4 tracking-tight">Rasmdan Matnga</h2>
+              <p className="text-base sm:text-lg text-slate-500 font-sans leading-relaxed">
+                Matn va murakkab formulalarni soniyalar ichida yuqori aniqlikda ajratib oling.
               </p>
             </div>
             <div className="w-full max-w-xl">
@@ -275,28 +274,28 @@ const App: React.FC = () => {
             <div className="w-full lg:w-1/2 flex flex-col gap-3 sm:gap-4">
 
               {/* Active image */}
-              <div className="bg-white p-1.5 sm:p-2 rounded-2xl border border-slate-200 shadow-sm relative group">
+              <div className="bg-white p-2 rounded-3xl border border-slate-200/60 shadow-sm relative group transition-all">
                 <img
                   src={images[activeIndex]?.preview}
                   alt="Selected"
-                  className="w-full h-auto max-h-[50vh] sm:max-h-[55vh] object-contain rounded-xl bg-slate-100/50"
+                  className="w-full h-auto max-h-[50vh] sm:max-h-[55vh] object-contain rounded-2xl bg-slate-50"
                 />
                 <button
                   onClick={() => handleRemoveImage(activeIndex)}
-                  className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white/90 backdrop-blur-sm p-1.5 sm:p-2 rounded-full shadow-sm border border-slate-200 text-slate-600 hover:text-red-500 transition-colors"
+                  className="absolute top-4 right-4 sm:top-5 sm:right-5 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-sm border border-slate-200 text-slate-400 hover:text-slate-900 hover:scale-105 transition-all"
                   title="Rasmni o'chirish"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" className="sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
               </div>
 
-              {/* Thumbnail strip - har doim ko'rinadi (+ tugmasi ham) */}
-              <div className="flex gap-2 flex-wrap items-center">
+              {/* Thumbnail strip */}
+              <div className="flex gap-3 flex-wrap items-center px-1">
                   {images.map((img, idx) => (
                     <div
                       key={idx}
                       onClick={() => setActiveIndex(idx)}
-                      className={`relative cursor-pointer rounded-xl overflow-hidden border-2 transition-all ${activeIndex === idx ? 'border-indigo-500 shadow-md' : 'border-slate-200 hover:border-indigo-300'}`}
+                      className={`relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-300 ${activeIndex === idx ? 'border-slate-900 shadow-md scale-105' : 'border-transparent hover:border-slate-300 opacity-70 hover:opacity-100'}`}
                       style={{ width: 64, height: 64 }}
                     >
                       <img src={img.preview} alt={`Rasm ${idx + 1}`} className="w-full h-full object-cover" />
@@ -320,8 +319,8 @@ const App: React.FC = () => {
                       </button>
                     </div>
                   ))}
-                  {/* Rasm qo'shish tugmasi - HAR DOIM ko'rinadi */}
-                  <label className="cursor-pointer w-16 h-16 rounded-xl border-2 border-dashed border-indigo-300 hover:border-indigo-500 bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center justify-center text-indigo-400 hover:text-indigo-600 transition-all gap-0.5">
+                  {/* Rasm qo'shish tugmasi */}
+                  <label className="cursor-pointer w-16 h-16 rounded-2xl border-2 border-dashed border-slate-300 hover:border-slate-900 bg-transparent flex flex-col items-center justify-center text-slate-400 hover:text-slate-900 transition-all gap-1 group">
                     <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => {
                       const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
                       if (files.length > 0) handleImagesSelect(files);
@@ -336,10 +335,10 @@ const App: React.FC = () => {
               {!extractedData && !isLoading && (
                 <button
                   onClick={handleConvert}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 sm:py-3.5 px-6 rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-heading font-medium text-lg py-4 px-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] hover:-translate-y-0.5 transition-all active:scale-[0.98] flex items-center justify-center gap-3 mt-2"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" className="sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
-                  {images.length > 1 ? `${images.length} ta rasmni Ajratish` : 'Matnni Ajratish'}
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
+                  {images.length > 1 ? `${images.length} ta rasmni Tahlil Qilish` : 'Tahlil Qilish'}
                 </button>
               )}
 
@@ -365,9 +364,10 @@ const App: React.FC = () => {
 
               <button
                 onClick={handleReset}
-                className="text-slate-400 hover:text-slate-600 text-sm text-center py-1 transition-colors"
+                className="text-slate-400 hover:text-slate-900 font-medium text-sm text-center py-2 transition-colors inline-flex justify-center items-center gap-1 mt-2"
               >
-                ← Boshidan boshlash
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Ortga qaytish
               </button>
             </div>
 

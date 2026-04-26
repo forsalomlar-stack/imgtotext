@@ -12,7 +12,8 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist ",
     "server": "node server/server.js",
-    "start": "node server/server.js"
+    "start": "node server/server.js",
+    "push": "git add . && git commit -m \"Avtomatik saqlash (Auto commit)\" && git push"
   },
   "dependencies": {
     "@google/genai": "^1.42.0",
