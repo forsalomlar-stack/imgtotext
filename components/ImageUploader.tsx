@@ -1,10 +1,10 @@
 import React, { useRef, useState } from 'react';
 
 interface ImageUploaderProps {
-  onImagesSelect: (files: File[]) => void;
+  onImageSelect: (file: File) => void;
 }
 
-export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImagesSelect }) => {
+export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -18,13 +18,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImagesSelect }) 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-    if (files.length > 0) onImagesSelect(files);
+    const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+    if (file) onImageSelect(file);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
-    if (files.length > 0) onImagesSelect(files);
+    const file = Array.from(e.target.files || []).find(f => f.type.startsWith('image/'));
+    if (file) onImageSelect(file);
     e.target.value = '';
   };
 
@@ -46,7 +46,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImagesSelect }) 
           ref={fileInputRef}
           onChange={handleChange}
           accept="image/*"
-          multiple
           className="hidden"
         />
 
@@ -58,7 +57,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImagesSelect }) 
           </svg>
         </div>
 
-        <h3 className="text-lg sm:text-xl font-heading font-bold text-slate-900 mb-2">Rasmlarni yuklash</h3>
+        <h3 className="text-lg sm:text-xl font-heading font-bold text-slate-900 mb-2">Rasmni yuklash</h3>
         <p className="text-sm sm:text-base text-slate-500 font-sans text-center max-w-sm px-2 mb-4 leading-relaxed">
           Suratlarni shu yerga tashlang yoki <b>Ctrl+V</b> orqali qo'ying.
         </p>

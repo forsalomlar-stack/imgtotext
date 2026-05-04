@@ -28,11 +28,9 @@ const sendResultToBackend = async (text: string, imagePreview: string): Promise<
 };
 
 const App: React.FC = () => {
-  const [images, setImages] = useState<ImageFile[]>([]);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [image, setImage] = useState<ImageFile | null>(null);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [processingIndex, setProcessingIndex] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -49,11 +47,11 @@ const App: React.FC = () => {
           if (file) files.push(file);
         }
       }
-      if (files.length > 0) handleImagesSelect(files);
+      if (files.length > 0) handleImageSelect(files[0]);
     };
     window.addEventListener('paste', handleGlobalPaste);
     return () => window.removeEventListener('paste', handleGlobalPaste);
-  }, [images]); // images dependency — har yangi rasm qo'shilganda yangilanadi
+  }, []); // Empty dependency array as we don't need 'images' anymore
 
   useEffect(() => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
@@ -130,21 +128,13 @@ const App: React.FC = () => {
     });
   };
 
-  const handleImagesSelect = async (files: File[]) => {
+  const handleImageSelect = async (file: File) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Fayllarni raqamli (natural) tartibda saralash
-      // Masalan: 1.jpg, 2.jpg, 10.jpg — to'g'ri tartib
-      const sortedFiles = [...files].sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
-      );
-
-      const processed = await Promise.all(sortedFiles.map(f => processImage(f)));
-      const newStartIndex = images.length; // capture before update
-      setImages(prev => [...prev, ...processed]);
-      setActiveIndex(newStartIndex); // first newly added image becomes active
+      const processed = await processImage(file);
+      setImage(processed);
       setExtractedData(null);
     } catch (err: any) {
       setError(err?.message || "Rasmni qayta ishlashda xatolik");
@@ -153,75 +143,27 @@ const App: React.FC = () => {
     }
   };
 
-  const handleRemoveImage = (idx: number) => {
-    setImages(prev => {
-      const next = prev.filter((_, i) => i !== idx);
-      setActiveIndex(Math.min(idx, next.length - 1));
-      return next;
-    });
+  const handleRemoveImage = () => {
+    setImage(null);
     setExtractedData(null);
     setError(null);
   };
 
-  /**
-   * Rasm OCR matnidan birinchi aniq raqamni topadi.
-   * "1-variant", "№2", "Variant 3", "10.", "1)" kabi formatlarni qo'llab-quvvatlaydi.
-   * Raqam topilmasa Infinity qaytaradi (tartiblashda oxiriga o'tadi).
-   */
-  const extractNumberFromText = (text: string): number => {
-    // Ustuvorlik tartibi bo'yicha izlash:
-    // 1. "1-variant", "1 variant", "variant 1", "1)" , "1.", "№1", "#1"
-    const patterns = [
-      /(?:variant|варіант|варіант|v\.?)\s*[:\-]?\s*(\d+)/i,  // variant 1
-      /(\d+)\s*[-–]\s*(?:variant|топшириқ|задание)/i,           // 1-variant
-      /[№#]\s*(\d+)/,                                             // №1, #1
-      /^(\d+)[.)]\s/m,                                            // "1. " yoki "1) " qator boshi
-      /(\d+)/,                                                    // Xohlagan birinchi raqam
-    ];
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (match) return parseInt(match[1] || match[0], 10);
-    }
-    return Infinity;
-  };
-
   const handleConvert = async () => {
-    if (images.length === 0) return;
+    if (!image) return;
 
     setIsLoading(true);
     setError(null);
     setExtractedData(null);
 
     try {
-      // { originalIndex, text, sortKey } saqlaymiz
-      const results: { originalIndex: number; text: string; sortKey: number }[] = [];
+      const text = await extractTextFromImage(image.data, image.mimeType);
+      
+      setExtractedData({ text, timestamp: Date.now() });
 
-      for (let i = 0; i < images.length; i++) {
-        setProcessingIndex(i);
-        const img = images[i];
-        const text = await extractTextFromImage(img.data, img.mimeType);
-        results.push({ originalIndex: i, text, sortKey: Infinity });
-      }
-
-      // Har bir natijadan raqam topamiz
-      for (const item of results) {
-        item.sortKey = extractNumberFromText(item.text);
-      }
-
-      // Raqam bo'yicha saralash (raqam yo'q bo'lsa — original tartib)
-      results.sort((a, b) => {
-        if (a.sortKey !== b.sortKey) return a.sortKey - b.sortKey;
-        return a.originalIndex - b.originalIndex; // teng raqamda asl tartib
-      });
-
-      setProcessingIndex(null);
-      const combinedText = results.map(r => r.text).join('\n\n---\n\n');
-      setExtractedData({ text: combinedText, timestamp: Date.now() });
-
-      // Send first image as thumbnail to backend
-      sendResultToBackend(combinedText, images[0].preview);
+      // Send result to backend
+      sendResultToBackend(text, image.preview);
     } catch (err: any) {
-      setProcessingIndex(null);
       const msg = err?.message || "";
       console.error("Processing error:", err);
 
@@ -236,8 +178,7 @@ const App: React.FC = () => {
   };
 
   const handleReset = () => {
-    setImages([]);
-    setActiveIndex(0);
+    setImage(null);
     setExtractedData(null);
     setError(null);
   };
@@ -255,7 +196,7 @@ const App: React.FC = () => {
       </header>
 
       <main className="flex-1 w-full max-w-6xl mx-auto p-4 sm:p-6 md:p-8">
-        {images.length === 0 ? (
+        {!image ? (
           <div className="h-full flex flex-col items-center justify-center animate-[fadeIn_0.5s_ease-out] py-4">
             <div className="text-center mb-10 max-w-lg px-2">
               <h2 className="text-4xl sm:text-5xl font-heading font-bold text-zinc-900 mb-4 tracking-tight">Rasmdan Matnga</h2>
@@ -264,7 +205,7 @@ const App: React.FC = () => {
               </p>
             </div>
             <div className="w-full max-w-xl">
-              <ImageUploader onImagesSelect={handleImagesSelect} />
+              <ImageUploader onImageSelect={handleImageSelect} />
               {isLoading && <p className="text-center text-sm text-zinc-500 mt-4">Rasm yuklanmoqda...</p>}
             </div>
           </div>
@@ -276,12 +217,12 @@ const App: React.FC = () => {
               {/* Active image */}
               <div className="bg-white p-2 rounded-3xl border border-zinc-200/60 shadow-sm relative group transition-all">
                 <img
-                  src={images[activeIndex]?.preview}
+                  src={image.preview}
                   alt="Selected"
                   className="w-full h-auto max-h-[50vh] sm:max-h-[55vh] object-contain rounded-2xl bg-zinc-50"
                 />
                 <button
-                  onClick={() => handleRemoveImage(activeIndex)}
+                  onClick={handleRemoveImage}
                   className="absolute top-4 right-4 sm:top-5 sm:right-5 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-sm border border-zinc-200 text-zinc-400 hover:text-zinc-900 hover:scale-105 transition-all"
                   title="Rasmni o'chirish"
                 >
@@ -289,56 +230,13 @@ const App: React.FC = () => {
                 </button>
               </div>
 
-              {/* Thumbnail strip */}
-              <div className="flex gap-3 flex-wrap items-center px-1">
-                  {images.map((img, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => setActiveIndex(idx)}
-                      className={`relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all duration-300 ${activeIndex === idx ? 'border-zinc-900 shadow-md scale-105' : 'border-transparent hover:border-zinc-300 opacity-70 hover:opacity-100'}`}
-                      style={{ width: 64, height: 64 }}
-                    >
-                      <img src={img.preview} alt={`Rasm ${idx + 1}`} className="w-full h-full object-cover" />
-                      {/* Processing indicator */}
-                      {isLoading && processingIndex === idx && (
-                        <div className="absolute inset-0 bg-indigo-600/60 flex items-center justify-center rounded-xl">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        </div>
-                      )}
-                      {/* Done indicator */}
-                      {processingIndex !== null && processingIndex > idx && (
-                        <div className="absolute inset-0 bg-green-500/50 flex items-center justify-center rounded-xl">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        </div>
-                      )}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
-                        className="absolute top-0.5 right-0.5 bg-white/80 rounded-full p-0.5 text-zinc-500 hover:text-red-500"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                      </button>
-                    </div>
-                  ))}
-                  {/* Rasm qo'shish tugmasi */}
-                  <label className="cursor-pointer w-16 h-16 rounded-2xl border-2 border-dashed border-zinc-300 hover:border-zinc-900 bg-transparent flex flex-col items-center justify-center text-zinc-400 hover:text-zinc-900 transition-all gap-1 group">
-                    <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => {
-                      const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
-                      if (files.length > 0) handleImagesSelect(files);
-                      e.target.value = '';
-                    }} />
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    <span className="text-[9px] font-medium">Qo'sh</span>
-                  </label>
-                </div>
-
-
               {!extractedData && !isLoading && (
                 <button
                   onClick={handleConvert}
                   className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-heading font-medium text-lg py-4 px-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] hover:-translate-y-0.5 transition-all active:scale-[0.98] flex items-center justify-center gap-3 mt-2"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
-                  {images.length > 1 ? `${images.length} ta rasmni Tahlil Qilish` : 'Tahlil Qilish'}
+                  Tahlil Qilish
                 </button>
               )}
 
@@ -346,9 +244,7 @@ const App: React.FC = () => {
                 <div className="w-full bg-white p-4 sm:p-6 rounded-xl border border-zinc-200 shadow-sm text-center">
                   <div className="inline-block w-6 h-6 sm:w-8 sm:h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-2 sm:mb-3"></div>
                   <p className="text-sm sm:text-base text-zinc-600 font-medium animate-pulse">
-                    {images.length > 1
-                      ? `Tahlil qilinmoqda... (${(processingIndex ?? 0) + 1}/${images.length})`
-                      : 'Tahlil qilinmoqda...'}
+                    Tahlil qilinmoqda...
                     <br/>
                     <span className="text-[10px] sm:text-xs text-zinc-400 font-normal">Murakkab matnlar uchun biroz vaqt ketishi mumkin</span>
                   </p>
